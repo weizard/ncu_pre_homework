@@ -47,4 +47,3 @@ if __name__ == '__main__':
         else:
            print 'Join complete: see', absto
         if interactive: raw_input('Press Enter key') # pause if clicked
-        
