@@ -64,11 +64,56 @@ def send_message(gmail_service, user, message):
 	except:
 		pass
 
-def CreateMessage(sender, to, subject, message_text):
+def create_message(sender, to, subject, message_text):
 	message = MIMEText(message_text)
 	message['to'] = to
 	message['from'] = sender
 	message['subject'] = subject
+	return {'raw': base64.b64encode(message.as_string())}
+
+def create_message_with_attachment(sender, to, subject, message_text, file_dir,filename):
+	message = MIMEMultipart()
+	message['to'] = to
+	message['from'] = sender
+	message['subject'] = subject
+
+	msg = MIMEText(message_text)
+	message.attach(msg)
+
+	path = os.path.join(file_dir, filename)
+	content_type, encoding = mimetypes.guess_type(path)
+
+	print (content_type)
+	print (encoding)
+	if os.path.exists(os.path.abspath(path)):
+		print ("y")
+	else:
+		print ('n')
+
+	if content_type is None or encoding is not None:
+		content_type = 'application/octet-stream'
+	main_type, sub_type = content_type.split('/', 1)
+	if main_type == 'text':
+		fp = open(path, 'rb')
+		msg = MIMEText(fp.read(), _subtype=sub_type)
+		fp.close()
+	elif main_type == 'image':
+		fp = open(path, 'rb')
+		msg = MIMEImage(fp.read(), _subtype=sub_type)
+		fp.close()
+	elif main_type == 'audio':
+		fp = open(path, 'rb')
+		msg = MIMEAudio(fp.read(), _subtype=sub_type)
+		fp.close()
+	else:
+		fp = open(path, 'rb')
+		msg = MIMEBase(main_type, sub_type)
+		msg.set_payload(fp.read())
+		fp.close()
+
+	msg.add_header('Content-Disposition', 'attachment', filename=filename)
+	message.attach(msg)
+
 	return {'raw': base64.b64encode(message.as_string())}
 
 if __name__ == '__main__':
@@ -77,7 +122,8 @@ if __name__ == '__main__':
 		service = certificate()
 		user_profile_response = service.users().getProfile(userId='me').execute()
 		print ('messagesTotal:'+str(user_profile_response["messagesTotal"]))
-		mail = CreateMessage("purpledoor4921@gmail.com","purpledoor4921@gmail.com","test case","test")
+		"""
+		mail = create_message_with_attachment("purpledoor4921@gmail.com","purpledoor4921@gmail.com","test case","test","","cover.jpg")
 		send_message(service,'me',mail)
 		"""
 		query_subject = raw_input("subject : ")
@@ -85,7 +131,7 @@ if __name__ == '__main__':
 		for mail_id in query_result['messages']:
 			#print('mail id : '+str(mail_id['id']))
 			download_files(service, 'me', mail_id['id'])
-		"""
+		
 	except :
 		#print('An error occured :',error)
 		pass
