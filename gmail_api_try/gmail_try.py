@@ -50,14 +50,15 @@ try:
 	#print (json.dumps(user_mail_response))
 	#print (json.dumps(user_mail_response['payload']['parts']))
 	for part in user_mail_response['payload']['parts']:
-		#s = unidcode("個人簡歷.pdf",'utf-8')
+		
 		if part['filename']:
 			#print (part['body']['attachmentId'])
-			data = base64.urlsafe_b64decode((part['body']['attachmentId']+"==").encode("utf-8"))
-			print (binascii.a2b_base64(data+"="))
-			#f = open(part['filename'],'wb')
-			#f.write(data)
-			#f.close()
+			data = service.users().messages().attachments().get(userId = 'me', messageId ='151e7cc2cce9a31a', id = part['body']['attachmentId'] ).execute()
+			print (data['size'])
+			
+			f = open(part['filename'],'w')
+			f.write(base64.urlsafe_b64decode(data['data'].encode("utf-8")))
+			f.close()
 
 	#s = str(user_mail_response['raw'])
 	#print (base64.urlsafe_b64decode(s + '==='))
