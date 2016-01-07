@@ -71,7 +71,7 @@ def create_message(sender, to, subject, message_text):
 	message['subject'] = subject
 	return {'raw': base64.b64encode(message.as_string())}
 
-def create_message_with_attachment(sender, to, subject, message_text, file_dir,filename):
+def create_message_with_attachment(sender, to, subject, message_text, file_path):
 	message = MIMEMultipart()
 	message['to'] = to
 	message['from'] = sender
@@ -80,15 +80,9 @@ def create_message_with_attachment(sender, to, subject, message_text, file_dir,f
 	msg = MIMEText(message_text)
 	message.attach(msg)
 
-	path = os.path.join(file_dir, filename)
+	path = os.path.expanduser(file_path)
+	filename = path.split('/')[-1]
 	content_type, encoding = mimetypes.guess_type(path)
-
-	print (content_type)
-	print (encoding)
-	if os.path.exists(os.path.abspath(path)):
-		print ("y")
-	else:
-		print ('n')
 
 	if content_type is None or encoding is not None:
 		content_type = 'application/octet-stream'
@@ -122,15 +116,27 @@ if __name__ == '__main__':
 		service = certificate()
 		user_profile_response = service.users().getProfile(userId='me').execute()
 		print ('messagesTotal:'+str(user_profile_response["messagesTotal"]))
+
+		mail_from = raw_input("mail from :")
+		mail_to = raw_input("mail to :")
+		mail_subject = raw_input("subject :")
+		mail_message = raw_input("content :")
+		path = raw_input("file_path :")
+
+		mail = create_message_with_attachment(mail_from,mail_to,mail_subject,mail_message,path)
+		send_message(service,'me',mail)
 		"""
 		mail = create_message_with_attachment("purpledoor4921@gmail.com","purpledoor4921@gmail.com","test case","test","","cover.jpg")
 		send_message(service,'me',mail)
+		"""
+
 		"""
 		query_subject = raw_input("subject : ")
 		query_result = query_mail(service, 'me', "subject:"+query_subject)
 		for mail_id in query_result['messages']:
 			#print('mail id : '+str(mail_id['id']))
 			download_files(service, 'me', mail_id['id'])
+		"""
 		
 	except :
 		#print('An error occured :',error)
