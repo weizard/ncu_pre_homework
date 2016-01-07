@@ -1,4 +1,6 @@
-plit a file into a set of portions; join.py puts them
+#!/usr/bin/python
+#########################################################
+# split a file into a set of portions; join.py puts them
 # back together; this is a customizable version of the 
 # standard unix split command-line utility; because it
 # is written in Python, it also works on Windows and can
