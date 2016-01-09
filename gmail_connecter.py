@@ -9,12 +9,13 @@ from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email import encoders
 
 SCOPES = 'https://mail.google.com/'
 CLIENT_SECRET = 'client_secret.json'
 
 def certificate():
-	storage = file.Storage('gmail-python-quickstart.json')
+	storage = file.Storage('gmail-python.json')
 	credentials = storage.get()
 
 	if not credentials or credentials.invalid:
@@ -72,7 +73,9 @@ def download_files(gmail_service, user, mailId):
 				output.write(base64.urlsafe_b64decode(data['data'].encode("utf-8")))
 				output.close
 				print (str(parts['filename'].encode("utf-8"))+" download done!")
+				fname = parts['filename']
 				#print ('download done !')
+				#return fname
 			else :
 				#print ("don't have attachment !")
 				pass
@@ -87,8 +90,9 @@ def send_message(gmail_service, user, message):
 		#print ("Message Id : ",send_mail['id'])
 		print ('mail sended')
 		return send_mail
-	except:
-		pass
+	except errors.HttpError, error:
+		#pass
+		print error
 
 def create_message(sender, to, subject, message_text):
 	message = MIMEText(message_text)
@@ -97,48 +101,58 @@ def create_message(sender, to, subject, message_text):
 	message['Subject'] = subject
 	return {'raw': base64.b64encode(message.as_string())}
 
-def create_message_with_attachment(sender, to, subject, message_text, file_path):
-	message = MIMEMultipart()
-	message['To'] = to
-	message['From'] = sender
-	message['Subject'] = subject
+def create_message_with_attachment(sender, to, subject, message_text, files_path):
+	try:
+		message = MIMEMultipart()
+		message['To'] = to
+		message['From'] = sender
+		message['Subject'] = subject
 
-	msg = MIMEText(message_text)
-	message.attach(msg)
+		msg = MIMEText(message_text)
+		message.attach(msg)
 
-	path = os.path.expanduser(file_path)
-	filename = path.split('/')[-1]
+		for file_path in files_path :
+			path = os.path.expanduser(file_path)
+			filename = path.split('/')[-1]
 
-	#print (path)
-	#print (filename)
-	#print os.path.exists(path)
-	content_type, encoding = mimetypes.guess_type(path)
+			#print (path)
+			#print (filename)
+			#print os.path.exists(path)
+			content_type, encoding = mimetypes.guess_type(path)
+			#print (content_type)
+			#print (encoding)
 
-	if content_type is None or encoding is not None:
-		content_type = 'application/octet-stream'
-	main_type, sub_type = content_type.split('/', 1)
-	if main_type == 'text':
-		fp = open(path, 'rb')
-		msg = MIMEText(fp.read(), _subtype=sub_type)
-		fp.close()
-	elif main_type == 'image':
-		fp = open(path, 'rb')
-		msg = MIMEImage(fp.read(), _subtype=sub_type)
-		fp.close()
-	elif main_type == 'audio':
-		fp = open(path, 'rb')
-		msg = MIMEAudio(fp.read(), _subtype=sub_type)
-		fp.close()
-	else:
-		fp = open(path, 'rb')
-		msg = MIMEBase(main_type, sub_type)
-		msg.set_payload(fp.read())
-		fp.close()
+			if content_type is None or encoding is not None:
+				content_type = 'application/octet-stream'
+			main_type, sub_type = content_type.split('/', 1)
+			#print main_type
+			#print sub_type
+			if main_type == 'text':
+				fp = open(path, 'rb')
+				msg = MIMEText(fp.read(), _subtype=sub_type)
+				fp.close()
+			elif main_type == 'image':
+				fp = open(path, 'rb')
+				msg = MIMEImage(fp.read(), _subtype=sub_type)
+				fp.close()
+			elif main_type == 'audio':
+				fp = open(path, 'rb')
+				msg = MIMEAudio(fp.read(), _subtype=sub_type)
+				fp.close()
+			else:
+				fp = open(path, 'rb')
+				#msg = MIMEBase(main_type, sub_type)
+				msg = MIMEBase('application', 'octet-stream')
+				msg.set_payload(fp.read())
+				fp.close()
 
-	msg.add_header('Content-Disposition', 'attachment', filename=filename)
-	message.attach(msg)
+			msg.add_header('Content-Disposition', 'attachment', filename=filename)
+			message.attach(msg)
 
-	return {'raw': base64.b64encode(message.as_string())}
+		#return {'raw':encoders.encode_base64(message.as_string())}
+		return {'raw': base64.urlsafe_b64encode(message.as_string())}
+	except errors.HttpError, error:
+		print error
 
 if __name__ == '__main__':
 
