@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf8 -*-
 ##########################################################
 # join all part files in a dir created by split.py.  
 # This is roughly like a 'cat fromdir/* > tofile' command
