@@ -9,15 +9,17 @@
 # can also be imported and reused in other applications;
 #########################################################
 
-import sys, os
+import sys, os, re
 kilobytes = 1024
 megabytes = kilobytes * 1000
 chunksize = int(1.4 * megabytes)                   # default: roughly a floppy
 
 def split(fromfile, todir, chunksize=chunksize):
-    file_name = fromfile 
+    file_name = fromfile.split("/")[-1]
     #file_name = (file_name.split('/')[-1])
     #print (filename)
+    todir = re.sub(r'/\w*\.\w*$',("/"+todir),fromfile,1)
+    #print "to dir:"+todir
     if not os.path.exists(todir):                  # caller handles errors
         os.mkdir(todir)                            # make dir, read/write parts
     else:
@@ -32,6 +34,7 @@ def split(fromfile, todir, chunksize=chunksize):
             #os.remove(os.path.join(todir, fname)) 
     partnum = 0
     #print (os.path.exists(fromfile))
+    #print "output:"+fromfile
     input = open(os.path.join(fromfile), 'rb')                   # use binary mode on Windows
     file_array=[]
     while 1:                                       # eof=empty string from read
@@ -39,6 +42,7 @@ def split(fromfile, todir, chunksize=chunksize):
         if not chunk: break
         partnum  = partnum+1
         filename = os.path.join(todir, ('.'+file_name+'_'+str(partnum)))
+        #print filename
         file_array.append(filename)
         fileobj  = open(filename, 'wb')
         fileobj.write(chunk)
